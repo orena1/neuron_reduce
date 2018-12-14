@@ -70,18 +70,17 @@ for i in range(10000):
         e_syn, tau1, tau2, spike_interval, syn_weight = 0, 0.3, 1.8,  1000/2.5, 0.0016
     else:
         e_syn, tau1, tau2, spike_interval, syn_weight = -86, 1,   8,   1000/15.0, 0.0008
-    
-     
+    #set synaptic varibales
     synapses_list[i].e, synapses_list[i].tau1, synapses_list[i].tau2 = e_syn, tau1, tau2
-    
+    #set netstim variables
     netstims_list.append(h.NetStim())
     netstims_list[i].interval, netstims_list[i].number, netstims_list[i].start, netstims_list[i].noise = spike_interval, 9e9, 100, 1
-    
+    #set random
     randoms_list.append(h.Random())
     randoms_list[i].Random123(i)
     randoms_list[i].negexp(1)
     netstims_list[i].noiseFromRandom(randoms_list[i])       
-
+    #set netcon varibales 
     netcons_list.append(h.NetCon(netstims_list[i], synapses_list[i] ))
     netcons_list[i].delay, netcons_list[i].weight[0] = 0, syn_weight
 
