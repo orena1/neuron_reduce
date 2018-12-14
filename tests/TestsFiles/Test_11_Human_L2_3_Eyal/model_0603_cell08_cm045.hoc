@@ -1,0 +1,154 @@
+begintemplate model_0603_cell08_cm045
+
+public init, biophys, geom_nseg, delete_axon,active_biophys
+public create_axon, finish_creating_model_after_loading_morphology
+
+public soma, dend, apic, axon
+public all, somatic, apical, axonal, basal
+objref all, somatic, apical, axonal, basal, this
+
+strdef tstr
+
+proc init() {
+	all = new SectionList()
+	somatic = new SectionList()
+	basal = new SectionList()
+	apical = new SectionList()
+	axonal = new SectionList()
+	
+ 	forall delete_section()
+ 	StepDist = 60 // Almost no spines in human cells within the first 60 um
+ 				  // from soma - see Benavides-Piccione 2013
+	F_Spines = 1.9       //As calculated - see detailes in Eyal 2015
+	//Results of the fitting algorithm
+	CM =0.45234   	// uF/cm2
+	RM = 38907		// Ohm-cm2	
+	RA = 203.23 	// Ohm-cm
+	// Junction Potential of 16 mV. Not important anyway for the passive model 
+	// But important when adding voltage dependant process - synapses and VG ion channels
+	E_PAS =  -86
+	celsius = 37
+	NA_BAR = 8000
+	THA_NA = -43
+	K_BAR = 3200
+	EK = -90
+	AX_NA_BAR = 200
+	AX_K_BAR = 100
+	THA_KV = 25
+}
+
+create soma[1], dend[1], apic[1], axon[1],spine[1]
+
+external lambda_f
+proc geom_nseg() {
+
+  forsec all {
+
+  nseg = 1 + 2*int(L/40)
+
+  }
+
+}
+
+
+proc biophys() {
+	
+	
+	forsec all {
+	
+	   insert pas
+		
+		cm =CM
+	    g_pas=1/RM
+		Ra = RA
+		e_pas = E_PAS
+	}
+	
+	soma distance()
+	
+	forsec basal {	
+        if (distance(0.5)>StepDist) {
+            L = L*F_Spines^(2/3)
+            diam = diam*(F_Spines^(1/3))
+        }	
+    }
+    forsec apical {
+        if (distance(0.5)>StepDist) {
+            L = L*F_Spines^(2/3)
+            diam = diam*(F_Spines^(1/3))
+        }	
+    }
+
+
+	
+}
+
+proc active_biophys(){
+	soma{
+		insert na
+		insert kv
+		tha_na = THA_NA
+		tha_kv = THA_KV
+		gbar_na =  NA_BAR
+		gbar_kv = K_BAR
+		ek = EK
+	}
+	forsec axonal{
+		insert na
+		insert kv
+		tha_na = THA_NA
+		tha_kv = THA_KV
+		gbar_na =  AX_NA_BAR
+		gbar_kv = AX_K_BAR
+		ek = EK
+	}
+}
+
+
+proc delete_axon(){
+    forsec axonal{delete_section()}
+
+}
+
+proc create_axon(){
+	L1 = 1000
+	L2 = 5000
+	create axon[2]
+	d = 1/10^4
+	
+
+	access axon[0]
+	diam = d*10^4
+	L = L1
+	nseg = 201
+	axonal.append()
+	all.append()
+
+	access axon[1]
+	diam = d*10^4
+	L = L2
+	nseg = 201
+	axonal.append()
+	all.append()
+	connect axon[0](0), soma(1)
+	connect axon[1](0), axon[0](1)
+	access soma
+
+
+	
+
+
+}
+
+proc complete_full_model_creation() {
+    geom_nseg()      		             // calculates num of segments
+    delete_axon()		                     // deletes the axon
+    create_axon()					// add a long unmyelinated axon to the cell
+    biophys()			             // increases cell dimensions to account for spines
+    active_biophys()				// Add HH channels to soma and axon
+}
+
+
+
+
+endtemplate model_0603_cell08_cm045

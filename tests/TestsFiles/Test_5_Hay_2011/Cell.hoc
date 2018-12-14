@@ -1,0 +1,476 @@
+/**
+ * @file Cell.hoc
+ * @brief 
+ * @author king
+ * @date 2009-07-08
+ * @remark Copyright © BBP/EPFL 2005-2011; All rights reserved. Do not distribute without further notice.
+ */
+
+{load_file("import3d.hoc")}
+
+begintemplate Cell
+public init, printInfo, AddMorph, getCCell, setCCell, geom_nsec, geom_nseg_lambda, geom_nseg_fixed, SetCellProperties, connect2target, delete_axon, insertChannel
+public locateBAPSite, getLongestBranch, locateSites2, enable_ttx, disable_ttx
+public soma, dend, apic, axon, myelin, nSecAxonal, nSecAxonalOrig, segCounts, rnglist, synHelperList
+public synlist, all, apical, basal, somatic, axonal, gid, nSecAll, nSecSoma, nSecApical, nSecBasal, clear, ASCIIrpt, HDF5rpt, APC
+objref synlist, all, apical, basal, somatic, axonal, this, CCellRef, ASCIIrpt, HDF5rpt, APC, segCounts, rnglist, synHelperList
+
+//! Used when computing nseg per section
+external lambda_f
+
+/*!
+ * Constructor to create a Cell object usable in the bbp toolchain
+ *
+ * @param $1 gid [optional] Unique identifier for this cell if it to be used in a network
+ * @param $s2 full path to morphology [optional] file to load in cell's geometric information
+ */
+proc init() {
+	gid 	= 0
+	all 	= new SectionList()
+	somatic = new SectionList()
+	basal 	= new SectionList()
+	apical 	= new SectionList()
+	axonal 	= new SectionList()
+    forall delete_section()
+    if(numarg()>0) gid = $1
+	if(numarg()>1){
+		AddMorph($s2)
+    }
+    
+    synlist = new List()
+    rnglist = new List()
+    synHelperList = new List()
+}
+create soma[1], dend[1], apic[1], axon[1], myelin[1]
+
+proc AddMorph(){ localobj morph, import, strobj, extension
+    forall delete_section()
+    
+    strobj = new StringFunctions()
+    extension = new String()
+    
+    sscanf($s1, "%s", extension.s)
+    
+    strobj.right(extension.s, strobj.len(extension.s)-4)
+
+    if( strcmp(extension.s, ".asc") == 0 ) {
+        morph = new Import3d_Neurolucida3()
+    } else if( strcmp(extension.s, ".swc" ) == 0) {
+        morph = new Import3d_SWC_read()
+    } else {
+        printf("Unsupported file format: Morphology file has to end with .asc or .swc" )
+        quit()
+    }
+
+    morph.quiet = 1
+    morph.input($s1)
+    import = new Import3d_GUI(morph, 0)
+    import.instantiate(this)
+    
+    indexSections(import)
+    geom_nsec()
+}
+
+
+
+/**
+ * Replace the axon built from the original morphology file with a stub axon.  If no args are given,
+ * The stub axon will attempt to use diam info from original axon and L=30.  If args are present, the
+ * axon diam is tapered according to the values given.  Also, axon[0].L = 20, axon[1].L = 30.
+ * An optional myelin section can be added according to a flag.
+ *
+ * @param $1 Initial diameter for axon[0]
+ * @param $2 diameter at end of axon[0], start of axon[1]
+ * @param $3 diameter at end of axon[1]
+ * @param $4 diameter of myelin section (if set to 0, then not created at all)
+ */
+proc delete_axon(){ local nSec, D1, D2, dist, i1, i2, count
+
+    // preserve the number of original axonal sections
+    nSec  = 0
+    forsec axonal{nSec = nSec + 1}
+    
+    // Try to grab info from original axon
+    if(nSec == 0){ //No axon section present
+        //is this actually working?  Seems it would cause problems if we ever did have cells with 0 axon sections
+        D1 = D2 = 1
+    } else {
+        access axon[0]
+        i1 = i2 = v(0.0001) // used when serializing sections prior to sim start
+        D1 = D2 = diam
+        if( nSec > 1 ){ //More than one axon section present
+            access soma distance() //to calculate distance from soma
+            count = 0
+            forsec axonal{   // loop through all axon sections and check for 60um distance 
+                if( count == 1 ){
+                    i2 = v(0.0001)
+                }
+                count = count + 1
+                dist = distance(0.5)
+                if( dist > 60 ){ //if section is longer than 60um then store diam and exit from look
+                    D2 = diam
+                    break
+                }
+            }
+        }
+    }
+    
+    // get rid of the old axon
+    forsec axonal{delete_section()}
+    execute1("create axon[2]\n", this)
+    
+    // new axon dependant on args passed (or lack thereof)
+    access axon[0] {
+        if( numarg() == 0 ) {
+            L = 30
+            diam = D1
+            nseg = 1 + 2*int(L/40)
+        } else {
+            L = 20
+            nseg = 1+2*int(L/10)
+            diam(0:1) = $1:$2
+        }
+        all.append()
+        axonal.append()
+        v(0.0001) = i1
+    }
+    access axon[1] {
+        L = 30
+        if( numarg() == 0 ) {
+            diam = D2
+            nseg = 1 + 2*int(L/40)
+        } else {
+            nseg = 1+2*int(L/10)
+            diam(0:1) = $2:$3
+        }
+        all.append()
+        axonal.append()
+        v(0.0001) = i2
+    }
+    nSecAxonal = 2
+    
+    if( numarg() > 0 ) if ( $4 ) {
+        execute1("create myelin[1]\n", this)
+        access myelin{
+            L = 1000
+            nseg = 1+2*int(L/100)
+            diam = $4
+            v(0.0001) = i1
+        }
+        connect myelin(0), axon[1](1)
+    }
+    
+    // I am not sure if these connection methods have different consequences.  Maybe someone can reconcile that later?
+    if( numarg() == 0 ) {
+        soma[0] connect axon[0](0), 1
+        axon[0] connect axon[1](0), 1
+    } else {
+        connect axon(0), soma(0.5)
+        connect axon[1](0), axon[0](1)
+        access soma
+    }
+}
+
+/**
+*
+* Enable TTX by inserting TTXDynamicsSwitch and setting ttxo to 1.0
+*
+*/
+proc enable_ttx() {
+
+    forsec all {
+        // Insert the mechanism that controls the ttx concentration
+        // Na channels should use the ttxo variable set by this mechanism
+        // to switch on/off
+        if (!ismembrane("TTXDynamicsSwitch")) {
+            //insert TTXDynamicsSwitch
+        }
+        ttxo_level_TTXDynamicsSwitch = 1.0
+    }
+
+}
+
+
+/**
+*
+* Disable TTX by inserting TTXDynamicsSwitch and setting ttxo to 1e-14
+*
+*/
+proc disable_ttx() {
+
+    forsec all {
+        if (!ismembrane("TTXDynamicsSwitch")) {
+            //insert TTXDynamicsSwitch
+        }
+
+        // Use 1e-14 instead of 0.0. According to M.Hines setting ttxo could
+        // result in unexpected behavior
+        ttxo_level_TTXDynamicsSwitch = 1e-14
+    }
+
+}
+
+proc SetCellProperties(){local Rm,v_init
+        Rm = $1
+        v_init = $2
+        forall {
+                insert pas
+                Ra = 80
+                g_pas=1/Rm
+                e_pas=v_init
+                cm = 1
+        }
+        
+        //whenever the Cell properties (resistance esp.) change, recalculate how a section divides into segments
+        //geom_nseg()  //for now, let the CCell do this after biophys is executed
+}
+
+/*!
+ * Iterate over the section and compute how many sqgments should be allocate to each.  This number
+ * is influenced by the mechanisms distributed, so this function should be called after assigning biophys
+ */
+proc geom_nseg_lambda() { local secIndex
+    soma area(.5) // make sure diam reflects 3d points
+    
+    secIndex=0
+    forsec all {
+        nseg = int((L/(0.1*lambda_f(100))+.9)/2)*2 + 1
+        
+        segCounts.x[secIndex] = nseg
+        secIndex = secIndex+1
+    }
+}
+
+
+
+/*!
+ * Iterate over the section and compute how many sqgments should be allocate to each.  This number
+ * is influenced by the mechanisms distributed, so this function should be called after assigning biophys
+ * @param $1 nseg length
+ */
+proc geom_nseg_fixed() { local secIndex, chunkSize
+    chunkSize = 40
+    if( numarg() > 0 ) {
+        chunkSize = $1
+    }
+    soma area(.5) // make sure diam reflects 3d points
+    secIndex=0
+    forsec all {
+        nseg = 1 + 2*int(L/chunkSize)
+        segCounts.x[secIndex] = nseg
+        secIndex = secIndex+1
+    }
+}
+
+/*!
+ * Count up the number of sections. Additionally, assign as estimate to the nseg var of each section, but this
+ * will most likely change after biophys are assigned and geom_nseg called
+ */
+proc geom_nsec() { local nSec
+    nSec = 0
+    forsec all {
+        //nseg = int((L/(0.1*lambda_f(100))+.9)/2)*2 + 1
+        nSec = nSec + 1
+        //print nseg, " ", L
+    }
+    nSecAll = nSec
+    nSec = 0
+    forsec somatic { nSec = nSec + 1}
+    nSecSoma	= 	nSec
+    nSec = 0
+    forsec apical { nSec = nSec + 1}
+    nSecApical= 	nSec
+    nSec = 0
+    forsec basal { nSec = nSec + 1}
+    nSecBasal	= 	nSec
+    nSec = 0
+    forsec axonal { nSec = nSec + 1}
+    nSecAxonalOrig = nSecAxonal = nSec
+    
+    segCounts = new Vector()
+    segCounts.resize(nSecAll)
+    nSec=0
+    forsec all {
+        segCounts.x[nSec] = nseg
+        nSec = nSec+1
+    }
+}
+
+obfunc getCCell(){
+	return CCellRef
+}
+proc setCCell(){
+	CCellRef = $o1
+}
+
+//-----------------------------------------------------------------------------------------------
+
+/*!
+ * Assign section indices to the section voltage value.  This will be useful later for serializing 
+ * the sections into an array.  Note, that once the simulation begins, the voltage values will revert to actual data again.
+ *
+ * @param $o1 Import3d_GUI object
+ */
+proc indexSections() { local index  localobj tmpString, s
+    tmpString = new String()
+
+    s = $o1.swc.sections
+    for i=0, s.count()-1 {
+        $o1.name( s.object(i), tmpString.s )
+        sprint( tmpString.s, "%s.v(0.0001) = %d", tmpString.s, i )
+        execute( tmpString.s, this )
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+
+/*!
+ * When clearing the model, the circular reference between Cells and CCells must be broken so the 
+ * entity watching reference counts can work.
+ */
+proc clear() { localobj nil
+    CCellRef.CellRef = nil
+    //CCellRef = nil
+}
+
+//-----------------------------------------------------------------------------------------------
+
+/*!
+ * @param $o1 NetCon source (can be nil)
+ * @param $o2 Variable where generated NetCon will be placed
+ */
+proc connect2target() { //$o1 target point process, $o2 returned NetCon
+  soma $o2 = new NetCon(&v(1), $o1)
+  $o2.threshold = -30
+}
+
+/**
+ * @param $s1 Name of the section - soma, dend, apic, axon, or all
+ * $param $s2 Name of the channel
+ */
+proc insertChannel(){ localobj tmpString
+    tmpString = new String()
+    //if (strcmp($s2,"pas")==0){
+        sprint(tmpString.s, "forsec %s  insert %s", $s1, $s2)
+        execute(tmpString.s, this)
+    //}
+}
+
+/*!
+ * Calculates the length of the longest branch in a section array
+ *
+ * @param $s1 Name of the section array - soma, dend, apic, axon, or all
+ */
+func getLongestBranch(){local maxL,d localobj distallist,sref
+    strdef tstr
+    sprint(tstr,"%s distance()",$s1)
+    execute(tstr,this)
+
+    if (0 == strcmp($s1,"axon")) {
+        sprint(tstr,"%s[0] distance(1)",$s1)
+        execute(tstr,this)
+    }
+
+    maxL = 0
+    d = 0
+    distallist = new SectionList()
+    forsec $s1 {
+        sref = new SectionRef()
+        if (sref.nchild==0) distallist.append()
+    }
+    forsec distallist{
+        d = distance(1)
+        if(maxL<d) maxL = d
+    }
+    // for the soma case
+    if (maxL == 0) {
+        $s1 {
+            maxL = L
+        }
+    }
+
+    return maxL
+}
+
+/*!
+ * Locates the compartments at a certain distance in a section array
+ *
+ * @param $s1 Name of the section array - soma, dend, apic, axon, or all
+ * @param $2 Distance value
+ *
+ * returns a list of vectors with two values. Every vector in the list [value1, value2]
+ * represents one point at the specified distance. 
+ * value1 is the index of the section in the section array
+ * value2 is the x of the compartment in the section
+ */
+obfunc locateSites2() {local site,d0,d1,siteX,i localobj vv,ll
+    strdef tstr
+    ll = new List()
+
+    sprint(tstr,"%s distance()", $s1)
+    execute(tstr, this)
+
+    if (0 == strcmp($s1,"axon")) {
+        sprint(tstr,"%s[0] distance(1)",$s1)
+        execute(tstr,this)
+    }
+
+    site = $2
+    i = 0
+
+    forsec $s1 {
+        if (distance(0) < distance(1)) {
+            d0 = distance(0)
+            d1 = distance(1)
+        } else {
+            d1 = distance(0)
+            d0 = distance(1)
+        }
+
+        if (site <= d1 && site >= d0) {
+            siteX = (site-d0)/(d1-d0)
+            secNum = i
+            vv = new Vector()
+            ll.append(vv.append(secNum,siteX))
+        }
+
+        i = i+1
+    }
+    return ll
+}
+
+/*!
+ * Locates a compartment at a certain distance in a section array. If there is more than one compartment is found
+ * at this distance, the thickest compartment is chosen
+ *
+ * @param $s1 Name of the section array - soma, dend, apic, axon, or all
+ * @param $2 Distance value
+ *
+ * returns a vector [value1, value2] that represents one point at the specified distance. 
+ * value1 is the index of the section in the section array
+ * value2 is the x of the segment in the section
+ * If no compartment is found at the specified distance, and an empty vector is returned 
+ */
+obfunc locateBAPSite() {local thisdiam, iSite, thickSite localobj sitesList, returnList, thickSection
+    strdef locName
+    sitesList = locateSites2($s1, $2)
+    maxdiam = 0
+    for (iSite = 0; iSite < sitesList.count(); iSite += 1) {
+        thisdiam = apic[sitesList.o[iSite].x[0]].diam
+        if (thisdiam > maxdiam) {
+          thickSite = iSite
+          maxdiam = thisdiam
+        }
+    }
+    returnList = new Vector()
+   
+    if (sitesList.count() == 0) {
+        print "*** Unable to find compartment at BAP site ***"
+    } else {
+        returnList.append(sitesList.o(thickSite).x[0], sitesList.o(thickSite).x[1])
+    }
+    
+    return returnList
+}
+
+endtemplate Cell

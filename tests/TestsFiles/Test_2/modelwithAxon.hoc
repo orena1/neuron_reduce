@@ -1,0 +1,91 @@
+// An example of a template model file: (see Readme)
+// 
+// Notice the required declarations of sections - soma, dend, apic; the required declarations of section lists - somatic, apical, basal, all; 
+// The function complete_full_model_creation() is required only in order to use the attached test script. To use subtree_reductor_func(), only the above declarations and an init() are required.
+
+ 
+begintemplate modelwithAxon
+
+public init, biophys, geom_nseg, delete_axon, finish_creating_model_after_loading_morphology
+
+public soma, dend, apic, axon  // sections
+public all, somatic, apical, axonal, basal // section lists
+objref all, somatic, apical, axonal, basal, this
+
+proc init() {
+    all = new SectionList()
+    somatic = new SectionList()
+    basal = new SectionList()
+    apical = new SectionList()
+    axonal = new SectionList()
+    
+    forall delete_section()
+    StepDist = 60 // human cells have no spines in their first 60 um
+                                // from soma - see Benavides-Piccione 2013
+    F_Spines = 1.9       //As calculated - see detailes in Eyal 2015
+    
+    CM =0.45	// uF/cm2
+    RM = 38907
+    RA = 203
+    E_PAS =  -86
+
+}
+
+create soma[1], dend[1], apic[1], axon[1]   
+
+//external lambda_f
+proc geom_nseg() {
+    soma distance() 
+    
+    forsec all {
+        RA_calc = RA
+        RM_calc = RM*F_Spines
+        if (distance(1)>StepDist){
+            RA_calc = RA
+            RM_calc = RM*F_Spines
+        }
+        d = diam
+        lambda = sqrt(RM_calc/RA_calc*d/10000/4)*10000
+        nseg = int(L/lambda*10/2)*2+1		
+    }
+}
+
+
+proc biophys() {
+    forsec all {
+        insert pas
+        cm =CM
+        g_pas=1/RM
+        Ra = RA
+        e_pas = E_PAS
+    }
+  
+    soma distance()
+  
+    forsec basal {	
+        if (distance(0.5)>StepDist) {
+            L = L*F_Spines^(2/3)
+            diam = diam*(F_Spines^(1/3))
+        }	
+    }
+    forsec apical {
+        if (distance(0.5)>StepDist) {
+            L = L*F_Spines^(2/3)
+            diam = diam*(F_Spines^(1/3))
+        }	
+    }
+}
+
+
+proc delete_axon(){
+    forsec axonal{delete_section()}
+}
+
+
+proc complete_full_model_creation() {
+    geom_nseg()      		             // calculates num of segments
+    //delete_axon()		                     // deletes the axon
+    biophys()			             // increases cell dimensions to account for spines
+}
+
+endtemplate modelwithAxon

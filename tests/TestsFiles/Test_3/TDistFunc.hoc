@@ -1,0 +1,85 @@
+/**
+ * @file TDistFunc.hoc
+ * @brief 
+ * @author rajnish
+ * @date 2010-11-23
+ * @remark Copyright © BBP/EPFL 2005-2011; All rights reserved. Do not distribute without further notice.
+ */
+
+D__TDISTFUNCHOC = 1
+
+begintemplate TDistFunc
+    strdef stmp,distfunc,mech
+    public distribute, ndistribute, distribute_section_variable
+    
+    proc distribute(){local x localobj sl        
+        //if ((strcmp($s2,g_pas)==0)||(strcmp($s2,e_pas)==0)){
+            sl = $o1
+            mech = $s2
+            distfunc = $s3                
+            sprint(distfunc,"%%s %s(%%f) = %s",mech, distfunc)
+            //print distfunc
+            forsec sl for(x,0) {
+                sprint (stmp,distfunc,secname(),x,distance(x))
+                //print stmp
+                execute(stmp)
+         //   }
+        }
+    }
+
+    proc distribute_section_variable(){ localobj sl        
+        sl = $o1
+        mech = $s2
+        distfunc = $s3                
+        sprint(distfunc,"%%s %s = %s",mech, distfunc)
+        //print distfunc
+        forsec sl {
+            sprint (stmp,distfunc,secname(),distance(0.5))
+            //print stmp
+            execute(stmp)
+        }
+    }
+    
+    proc ndistribute(){local x,xroot,norm_factor localobj sl
+            //print "Inside distribute .. "        
+            sl = $o1
+            mech = $s2
+            distfunc = $s3
+            norm_factor = 1
+            if(numarg()>3) norm_factor = getLongestBranch(sl)
+            sprint(distfunc,"%%s %s(%%f) = %s",mech, distfunc)
+            //print distfunc
+            forsec sl for(x,0) {
+                sprint (stmp,distfunc,secname(),x,distance(x)/norm_factor)
+            //    print stmp
+                execute(stmp)
+            }
+    }
+
+
+    func getLongestBranch(){local maxL,d localobj distallist,sref
+        forsec $o1 {
+             distance()
+             break
+        }
+        maxL = 0
+        d = 0
+        distallist = new SectionList()
+        forsec $o1 {
+            sref = new SectionRef()
+            if (sref.nchild==0) distallist.append()
+        }
+        forsec distallist{
+            d = distance(1)
+            if(maxL<d) maxL = d
+        }
+        // for the soma case
+        if (maxL == 0) {
+            $o1 {
+                maxL = L
+            }
+        }
+        return maxL
+    }
+endtemplate TDistFunc
+

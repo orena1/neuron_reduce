@@ -1,0 +1,27 @@
+/*  helper functions in hoc for NeuroReduce */
+
+// Returns (as a vector) the lowest "transfer impedance (in Mohms) + transfer phase" within the subtree of the given subtree root section in relation to the proximal (to soma) tip of the given subtree root section, recursive
+// Called by find_lowest_subtree_impedance() in reducing_methods.py.
+obfunc lowest_impedance_recursive() { local lowest_impedance, lowest_phase, i   localobj curr_subtree_root, sref1, lowest_imp_vec, lowest_child_subtree_impedance, imp_obj
+    curr_subtree_root = $o1  // in the first call to the function, this is a root section of a dendritic trunk
+    imp_obj = $o2
+    curr_subtree_root.sec {
+        lowest_impedance = imp_obj.transfer(1) // farthest tip of the the curr root section
+        lowest_phase = imp_obj.transfer_phase(1)                                        
+    }
+  
+    if (curr_subtree_root.nchild != 0) { // if the curr section has child sections
+        for i=0, curr_subtree_root.nchild-1 curr_subtree_root.child[i] {  // for each child of the root, finds the lowest impedance within the subtree whose root is the curr child (in relation to the proximal tip in the curr root child)
+            curr_subtree_root.child[i] sref1 = new SectionRef()
+            lowest_child_subtree_impedance = lowest_impedance_recursive(sref1, imp_obj) // recursively returns the lowest transfer impedance and transfer phase within the curr subtree as a vector
+            if (lowest_child_subtree_impedance.x[0] < lowest_impedance) {                             
+                lowest_impedance = lowest_child_subtree_impedance.x[0]
+                lowest_phase = lowest_child_subtree_impedance.x[1]
+            }
+        }
+    }
+    lowest_imp_vec = new Vector(2)
+    lowest_imp_vec.x[0] = lowest_impedance
+    lowest_imp_vec.x[1] = lowest_phase
+    return lowest_imp_vec
+}

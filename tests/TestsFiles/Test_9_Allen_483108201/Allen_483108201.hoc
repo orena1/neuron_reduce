@@ -1,0 +1,83 @@
+// Author: Etay Hay, 2011, Guy Eyal 2016
+//    Models of Neocortical Layer 5 V1 from the Allen celltypes database
+//    http://celltypes.brain-map.org/mouse/experiment/electrophysiology/479704527
+
+
+begintemplate AllenBiophys
+public biophys
+
+proc biophys() {
+	forsec $o1.all {
+	  insert pas
+		cm = 1
+		Ra = 59.9448394431
+		e_pas = -88.22792053222656
+		celsius = 34
+	}
+
+  forsec $o1.somatic {
+    insert Im
+    insert Ih
+    insert NaTs
+    insert Nap
+    insert K_P
+    insert K_T
+    insert SK
+    insert Kv3_1   
+    insert Ca_HVA
+    insert Ca_LVA
+    insert CaDynamics
+    
+
+
+	ena = 53
+    ek = -107 
+
+    g_pas = 0.000239018
+    gbar_Im = 0.023329812011370452
+    gbar_Ih = 9.6928716541988625e-08
+    gbar_NaTs = 0.34482311536888094
+    gbar_Nap= 0.0023995340173893469
+    gbar_K_P = 0.00051333028673994363
+    gbar_K_T = 0.00035555199307475433
+    gbar_SK = 0.0010995410277168309
+    gbar_Kv3_1 = 0.0001305103068736102
+    gbar_Ca_HVA = 0.00064532313586834397
+    gbar_Ca_LVA = 0.0047123698191640527
+    gamma_CaDynamics = 0.00053244923638553988
+    decay_CaDynamics = 800.65255905487265
+    
+
+    
+
+
+  }
+
+	forsec $o1.apical {
+
+    g_pas = 0.00090417886509897558
+    cm = 4.3300862052082865
+  	
+	}
+	
+  forsec $o1.basal {
+
+
+  	g_pas = 4.8711227306455879e-05
+  	cm = 4.3300862052082865
+
+	}
+
+  forsec $o1.axonal {
+
+  	g_pas = 0.000419054901254712
+  	
+	}
+}
+
+endtemplate AllenBiophys
+
+
+
+
+

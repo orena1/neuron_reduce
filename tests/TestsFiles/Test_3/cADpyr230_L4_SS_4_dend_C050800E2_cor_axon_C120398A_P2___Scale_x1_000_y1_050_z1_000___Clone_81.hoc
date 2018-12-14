@@ -1,0 +1,129 @@
+{load_file("Cell.hoc")}
+{load_file("TDistFunc.hoc")}
+begintemplate cADpyr230_L4_SS_4_dend_C050800E2_cor_axon_C120398A_P2___Scale_x1_000_y1_050_z1_000___Clone_81
+public init, printInfo, delete_axon,  getCell, init_biophys, insertChannel
+public gid, CellRef, getThreshold, geom_nseg, gmechdistribute, biophys
+objref this, CellRef, gmechdistribute
+
+proc init() { local ind localobj strMorphName, strTmp, sf
+    strMorphName  = new String("dend-C050800E2_cor_axon-C120398A-P2_-_Scale_x1.000_y1.050_z1.000_-_Clone_81.asc")
+    strTmp        = new String()
+    sf            = new StringFunctions()
+    if(numarg() == 2){
+        sscanf($s2, "%s", strTmp.s)
+        ind      = sf.substr(strTmp.s, ".asc")
+        if((ind>0) && (ind == (sf.len(strTmp.s)-4))){
+            CellRef = new Cell($1, $s2)     
+        }else{
+            sprint(strMorphName.s, "%s/%s", $s2, strMorphName.s)
+            CellRef = new Cell($1, strMorphName.s)     
+        }
+    }   
+    gmechdistribute = new TDistFunc()
+    CellRef.setCCell(this)
+    gid = CellRef.gid    
+    geom_nseg()   //This function is called to have count of actual axon sections 
+    delete_axon()
+    insertChannel()
+    init_biophys()      
+    biophys()
+}
+
+func getThreshold(){ return (0.109229) }
+
+proc geom_nseg() {
+    CellRef.geom_nseg_fixed(40)  
+    CellRef.geom_nsec() //To count all sections
+}
+
+obfunc getCell(){
+    return CellRef
+}
+
+proc delete_axon(){
+    CellRef.delete_axon()
+}
+
+proc init_biophys() {
+    forsec CellRef.all { cm = 1.0 }
+    forsec CellRef.all { Ra = 100.0 }
+     
+    CellRef.soma[0] distance()
+}
+
+proc insertChannel() {
+
+}
+
+proc biophys() {
+//     CellRef.insertChannel("axonal","NaTa_t")
+//     CellRef.insertChannel("axonal","Nap_Et2")
+//     CellRef.insertChannel("axonal","K_Pst")
+//     CellRef.insertChannel("axonal","K_Tst")
+//     CellRef.insertChannel("axonal","SK_E2")
+//     CellRef.insertChannel("axonal","SKv3_1")
+//     CellRef.insertChannel("axonal","CaDynamics_E2")
+//     CellRef.insertChannel("axonal","Ca_HVA")
+//     CellRef.insertChannel("axonal","Ca_LVAst")
+//     CellRef.insertChannel("somatic","NaTs2_t")
+//     CellRef.insertChannel("somatic","SKv3_1")
+//     CellRef.insertChannel("somatic","SK_E2")
+//     CellRef.insertChannel("somatic","CaDynamics_E2")
+//     CellRef.insertChannel("somatic","Ca_HVA")
+//     CellRef.insertChannel("somatic","Ca_LVAst")
+//     CellRef.insertChannel("apical","NaTs2_t")
+//     CellRef.insertChannel("apical","SKv3_1")
+//     CellRef.insertChannel("apical","Im")
+//     CellRef.insertChannel("apical","Ih")
+//     CellRef.insertChannel("basal","Ih")
+//     CellRef.insertChannel("apical","Ih")
+//     CellRef.insertChannel("somatic","Ih")
+    CellRef.insertChannel("all","pas")
+
+    { CellRef.soma[0] distance() }
+    { forsec CellRef.all { e_pas = -75 } }
+    { forsec CellRef.all { g_pas = 3e-5 } }
+    { forsec CellRef.all { cm = 1 } }
+    { forsec CellRef.all { Ra = 100 } }
+//     { forsec CellRef.somatic { ek = -85 } }
+//     { forsec CellRef.somatic { ena = 50 } }
+//     { forsec CellRef.axonal { ek = -85 } }
+//     { forsec CellRef.axonal { ena = 50 } }
+//     { forsec CellRef.apical { ek = -85 } }
+//     { forsec CellRef.apical { ena = 50 } }
+    { forsec CellRef.apical { cm = 2 } }
+    { forsec CellRef.basal { cm = 2 } }
+    { forsec CellRef.apical { cm = 2 } }
+//     gmechdistribute.distribute(CellRef.axonal,"gNaTa_tbar_NaTa_t","( 0.000000 * %g  + 1.000000 ) * 3.999904",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gNap_Et2bar_Nap_Et2","( 0.000000 * %g  + 1.000000 ) * 0.000056",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gK_Pstbar_K_Pst","( 0.000000 * %g  + 1.000000 ) * 0.428834",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gK_Tstbar_K_Tst","( 0.000000 * %g  + 1.000000 ) * 0.071166",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gSK_E2bar_SK_E2","( 0.000000 * %g  + 1.000000 ) * 0.097244",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gSKv3_1bar_SKv3_1","( 0.000000 * %g  + 1.000000 ) * 0.004779",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gCa_HVAbar_Ca_HVA","( 0.000000 * %g  + 1.000000 ) * 0.000860",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gCa_LVAstbar_Ca_LVAst","( 0.000000 * %g  + 1.000000 ) * 0.001612",1)
+//     gmechdistribute.distribute(CellRef.axonal,"gamma_CaDynamics_E2","( 0.000000 * %g  + 1.000000 ) * 0.000502",1)
+//     gmechdistribute.distribute(CellRef.axonal,"decay_CaDynamics_E2","( 0.000000 * %g  + 1.000000 ) * 179.044149",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gNaTs2_tbar_NaTs2_t","( 0.000000 * %g  + 1.000000 ) * 0.999812",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gSKv3_1bar_SKv3_1","( 0.000000 * %g  + 1.000000 ) * 0.283745",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gSK_E2bar_SK_E2","( 0.000000 * %g  + 1.000000 ) * 0.002971",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gCa_HVAbar_Ca_HVA","( 0.000000 * %g  + 1.000000 ) * 0.000379",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gCa_LVAstbar_Ca_LVAst","( 0.000000 * %g  + 1.000000 ) * 0.006868",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gamma_CaDynamics_E2","( 0.000000 * %g  + 1.000000 ) * 0.002253",1)
+//     gmechdistribute.distribute(CellRef.somatic,"decay_CaDynamics_E2","( 0.000000 * %g  + 1.000000 ) * 739.416497",1)
+//     gmechdistribute.distribute(CellRef.apical,"gNaTs2_tbar_NaTs2_t","( 0.000000 * %g  + 1.000000 ) * 0.022874",1)
+//     gmechdistribute.distribute(CellRef.apical,"gSKv3_1bar_SKv3_1","( 0.000000 * %g  + 1.000000 ) * 0.039967",1)
+//     gmechdistribute.distribute(CellRef.apical,"gImbar_Im","( 0.000000 * %g  + 1.000000 ) * 0.001000",1)
+//     gmechdistribute.distribute(CellRef.apical,"gIhbar_Ih","(-0.869600 + 2.087000*exp((%g - 0.000000) * 0.003100)) * 0.000080",1)
+//     gmechdistribute.distribute(CellRef.somatic,"gIhbar_Ih","( 0.000000 * %g  + 1.000000 ) * 0.000080",1)
+//     gmechdistribute.distribute(CellRef.basal,"gIhbar_Ih","( 0.000000 * %g  + 1.000000 ) * 0.000080",1)
+    
+
+
+}
+
+public getHypAmp
+
+func getHypAmp(){return (-0.049683) }
+
+endtemplate cADpyr230_L4_SS_4_dend_C050800E2_cor_axon_C120398A_P2___Scale_x1_000_y1_050_z1_000___Clone_81
