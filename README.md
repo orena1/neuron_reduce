@@ -32,7 +32,7 @@ Go to example folder
 ```bash
 cd neuron_reduce
 cd example
-nrnivmodel mod #compile the mod files
+nrnivmodl mod #compile the mod files
 ```
 
 Open python and run the following code
