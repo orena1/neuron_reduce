@@ -7,7 +7,6 @@
 # - The model template file must have an init() function (see example in the attached model.hoc file) and the following public definitions specifying sections and section lists accordingly: 
 #    public soma, dend, apic ; public all, somatic, apical, basal
 # - Supports numerous types of synapses (two synapses are considered to be of different types if they are different from each other in at least one of the following values: reverse potential, tau1, tau2)
-# - Supports only a passive cell model. Conductances require code changes in subtree_reductor() in the creation of the new instance (see line 260)
 
 
 from neuron import h, gui
@@ -372,16 +371,15 @@ def type_of_point_process(PP):
 
 def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequency, model_filename='model.hoc', total_segments_manual = -1,PP_params_dict = {}):
     '''
-    Receives an instance of a cell with a loaded full morphology (the code as written supports only passive cell models), a list of synapse objects, a list of NetCon objects (the i'th netcon in the list should correspond to the i'th synapse), 
+    Receives an instance of a cell with a loaded full morphology, a list of synapse objects, a list of NetCon objects (the i'th netcon in the list should correspond to the i'th synapse), 
     the filename (string) of the model template hoc file that the cell was instantiated from, the desired reduction frequency as a float, optional parameter for the approximate desired number of segments in the new model (if this parameter is empty, the number of segments will be such that there is a segment for every 0.1 lambda),
     and an optional param for the point process to be compared before deciding on whethet to merge a synapse or not
     and reduces the cell (using the given reduction_frequency). Creates a reduced instance using the model template in the file whose filename is given as a parameter, and merges synapses of the same type that get mapped to the same segment (same "reduced" synapse object for them all, but different NetCon objects).
     Returns the new reduced cell, a list of the new synapses, and the list of the inputted netcons which now have connections with the new synapses.
     note #0: a default template is available, one can use: model_filename=model.hoc
-    note #1: Currently only supports a passive model. Models with somatic conductances require CODE CHANGES when creating the reduced instance (line 260)
-    note #2: The original cell instance, synapses and Netcons given as arguments are altered by the function and cannot be used outside of it in their original context.
-    note #3: Synapses are determined to be of the same type and mergeable if their reverse potential, tau1 and tau2 values are identical.
-    note #4: Merged synapses are assigned a single new synapse object that represents them all, but keep their original NetCon objects. Each such NetCon now connects the original synapse's NetStim with the reduced synapse.
+    note #1: The original cell instance, synapses and Netcons given as arguments are altered by the function and cannot be used outside of it in their original context.
+    note #2: Synapses are determined to be of the same type and mergeable if their reverse potential, tau1 and tau2 values are identical.
+    note #3: Merged synapses are assigned a single new synapse object that represents them all, but keep their original NetCon objects. Each such NetCon now connects the original synapse's NetStim with the reduced synapse.
     '''  
     h.init()
     start_time = time.time()
