@@ -5,8 +5,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="NR",
-    version="0.0.2",
-    author="Oren Amsalem, Guy Eyal, Noa ??",
+    version="0.0.3",
+    author="Oren Amsalem, Guy Eyal, Noa Rogozinski, Idan Segev",
     author_email="oren.amsalem1@mail.huji.ac.il",
     description="Efficient analytical reduction of nonlinear detailed neuron models",
     long_description=long_description,

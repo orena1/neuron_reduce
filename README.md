@@ -1,7 +1,7 @@
 Introduction
 ===========
 
-Neuron_Reduce provides an analytical method for reducing neuron model complexity. It enables the mapping of synapses and active ion channels to a computationally simpler model while accelerating simulation speed by up to 200-fold for inputs consisting of thousands of dendritic synapses. Full details are available in the accompanied paper --**DOI**
+Neuron_Reduce provides an analytical method for reducing neuron model complexity. It enables the mapping of synapses and active ion channels to a computationally simpler model while accelerating simulation speed by up to 200-fold for inputs consisting of thousands of dendritic synapses. Full details are available in the accompanied paper - https://doi.org/10.1101/506485
 
 Installation
 ===========
@@ -120,3 +120,4 @@ plt.show()
 
 Citation
 ===========
+https://doi.org/10.1101/506485

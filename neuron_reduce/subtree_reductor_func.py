@@ -560,22 +560,22 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
         basals[i].Ra = biophysical_cable_properties[index_in_reduced_cables_dimensions][2]
         basals[i].e_pas = biophysical_cable_properties[index_in_reduced_cables_dimensions][3]
 
-    ############################################################################################
-    # models with conductances require additional code, here or in the above code:
-    
-    ############################################################################################
+
+
         
     
-    # dividing the original synapses into baskets, so that all synapses that are on the same subtree will be together in the same basket
+   # dividing the original synapses into baskets, so that all synapses that are on the same subtree will be together in the same basket
     baskets = []  # a list of baskets of synapses, each basket in the list will hold the synapses of the subtree of the corresponding basket index
-    somatic_synapses = [] # each somatic synapse will be stored here as a tuple holding: the synapse's original index in the synapses_list and a tuple with its "type": (reverse potential, tau1, tau2)
+    somatic_synapses = [] # each somatic or axonal synapse will be stored here
+    soma_synapses_syn_to_netcon = {}
     location_in_basket_to_orig_index_synapse_map = {}  # dict that maps synapses in baskets to their orig synapse index: keys are tuples - (basket_index, index_in_basket), values are the original synapse index
     for i in num_of_subtrees:
         baskets.append([])
     for syn_index, synapse in enumerate(synapses_list):
         curr_subtree_index, curr_section_num, x = find_synapse_loc(synapse, mapping_sections_to_subtree_index)
-        if curr_subtree_index == SOMA_LABEL:  # for a somatic synapse
-            somatic_synapses.append((syn_index, (synapse.e, synapse.tau1, synapse.tau2)))
+        if curr_subtree_index == SOMA_LABEL or curr_subtree_index == 'axon':  # for a somatic synapse
+            somatic_synapses.append(synapse)
+            soma_synapses_syn_to_netcon[synapse] = netcons_list[syn_index]
         else:
             baskets[curr_subtree_index].append(synapse)
             location_in_basket_to_orig_index_synapse_map[(curr_subtree_index,len(baskets[curr_subtree_index]) -1)] = syn_index
@@ -630,8 +630,10 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
                     
                 try:
                     for param in PP_params_dict[type_of_point_process(PP)]:
-                        if getattr(PP,param)!=getattr(synapse,param):
-                            break
+                        if param not in ['rng']: # See this ticket :https://github.com/neuronsimulator/nrn/issues/136
+                            if str(type(getattr(PP,param)))!="<type 'hoc.HocObject'>": #ignore hoc objects
+                                if getattr(PP,param)!=getattr(synapse,param):
+                                    break
                     else: # same synapse propeties: merge them.
                         netcons_list[location_in_basket_to_orig_index_synapse_map[(curr_subtree_index, i_in_basket)]].setpost(PP)
                         break
@@ -643,20 +645,36 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
                 new_synapses_list.append(synapse)
                 new_synapse_counter = new_synapse_counter + 1
     
-    # adding the somatic synapses to the reduced model
-    somatic_synapses_dict = {}  # the keys are tuples of the synaptic type (reverse potential, tau1, tau2) , the value is the index in the new_synapses_list of the somatic synapse of that type that all other somatic synapses of the same type will be merged together with 
-    for orig_syn_index, (synapse_reverse_potential, synapse_tau1, synapse_tau2) in somatic_synapses:
-        if somatic_synapses_dict.get((synapse_reverse_potential, synapse_tau1, synapse_tau2)) == None:  # a somatic synapse of this type doesn't exist yet
-            first_somatic_synapse_of_this_type = synapses_list[orig_syn_index]
-            first_somatic_synapse_of_this_type.loc(0.5, sec = soma)  # moving the orig synapse's location to the center of the soma      
-            new_synapses_list.append(first_somatic_synapse_of_this_type)
-            new_synapse_counter = new_synapse_counter + 1   
-            first_somatic_synapse_of_this_type_index = len(new_synapses_list) - 1
-            somatic_synapses_dict[(synapse_reverse_potential, synapse_tau1, synapse_tau2)] = first_somatic_synapse_of_this_type_index
-        else:  # a somatic synapse of this type already exists
-            index_for_the_merged_synapse_of_this_type = somatic_synapses_dict.get((synapse_reverse_potential, synapse_tau1, synapse_tau2))
-            netcons_list[orig_syn_index].setpost(new_synapses_list[index_for_the_merged_synapse_of_this_type])  # sets this original synapse's netcon's target pointprocess to the somatic synapse of this type that already exists
+    # merging somatic and axonal synapses
+    synapses_per_seg = {}
+    for synapse in somatic_synapses:
+        seg_pointer = synapse.get_segment()
+        x = seg_pointer.x
+        section_for_synapse = seg_pointer.sec
+        if seg_pointer not in synapses_per_seg: 
+            synapses_per_seg[seg_pointer] = []
+        PPs_on_seg = synapses_per_seg[seg_pointer]
+        for PP in PPs_on_seg:
+            if type_of_point_process(PP) not in PP_params_dict:
+                add_PP_properties_to_dict(PP,PP_params_dict)
+                
+            try:
+                for param in PP_params_dict[type_of_point_process(PP)]:
+                    if param not in ['rng']: # See this ticket :https://github.com/neuronsimulator/nrn/issues/136
+                        if str(type(getattr(PP,param)))!="<type 'hoc.HocObject'>": #ignore hoc objects
+                            if getattr(PP,param)!=getattr(synapse,param):
+                                break
+                else: # same synapse propeties: merge them.
+                    soma_synapses_syn_to_netcon[synapse].setpost(PP)
+                    break
 
+            except:
+                continue
+        else: #If for finish the loop, it means that it is the first appearance of this synapse
+            synapse.loc(x, sec = section_for_synapse)
+            new_synapses_list.append(synapse)
+            new_synapse_counter = new_synapse_counter + 1
+            synapses_per_seg[seg_pointer].append(synapse)
 
     # copy active mechanisms
     if has_apical==False: apic=[]
