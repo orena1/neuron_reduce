@@ -383,7 +383,7 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
     '''  
     h.init()
     start_time = time.time()
-    global SectionsToDelete
+    global SectionsToDelete, section_per_subtree_index
     SectionsToDelete = []
     
     
@@ -708,6 +708,9 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
     reduced_cell.soma[0].push()
     h.delete_section()
     
+    # reset globals
+    SectionsToDelete = [] # A list of all section that will be deleted in the end, it is easier with a global.
+    section_per_subtree_index = {}
     
     secs_elapsed = time.time() - start_time
     print("reduction time in seconds: ", secs_elapsed)
