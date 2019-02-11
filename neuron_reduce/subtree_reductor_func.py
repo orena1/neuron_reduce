@@ -10,7 +10,7 @@
 
 
 from neuron import h, gui
-from reducing_methods import reduce_subtree, set_up_for_reduction, reduce_synapse, measure_input_impedance_of_subtree
+from .reducing_methods import reduce_subtree, set_up_for_reduction, reduce_synapse, measure_input_impedance_of_subtree
 import math
 import numpy as np
 import cmath
