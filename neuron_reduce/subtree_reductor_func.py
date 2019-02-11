@@ -176,7 +176,7 @@ def create_segments_to_mech_dic(remove_mechs=True, exclude=['pas', 'na_ion', 'k_
             for mech in seg:
                 segment_to_mech_vals[seg][mech.name()] = {}
                 for n in dir(mech):
-                    if '__' not in n and n not in ['next','name']:
+                    if '__' not in n and n not in ['next','name', 'is_ion']:
                         if not n.endswith('_' + mech.name()) and not mech.name().endswith('_ion'):
                             n += '_' + mech.name()
                         tm = getattr(seg,n)
