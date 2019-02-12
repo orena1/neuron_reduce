@@ -359,7 +359,7 @@ def add_PP_properties_to_dict(PP,PP_params_dict):
         if param[:2] =="__":
             continue
         if param in ["Section","allsec","baseattr","cas","g","get_loc","has_loc","hname",
-                    'hocobjptr',"i","loc","next","ref","same","setpointer","state"]:
+                    'hocobjptr',"i","loc","next","ref","same","setpointer","state" , "get_segment"]:
             continue
         PP_params.append(param)
     PP_params_dict[type_of_point_process(PP)] = PP_params
