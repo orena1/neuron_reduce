@@ -166,7 +166,7 @@ voltage_file = Path + "voltage_vectors_for_unit_test.txt"
 write_unit_test_vectors = WriteVectors
 create_type = 'allen'
 celsius = 34
-print Createtxt()
+print(Createtxt())
 os.system(Createtxt())
 print("Done Test 9, Allen V1 L5PC\n")
 
@@ -182,7 +182,7 @@ voltage_file = Path + "voltage_vectors_for_unit_test.txt"
 write_unit_test_vectors = WriteVectors
 create_type = 'allen'
 celsius = 34
-print Createtxt()
+print(Createtxt())
 os.system(Createtxt())
 print("Done Test 10, Allen V1 L1\n")
 
@@ -198,7 +198,7 @@ voltage_file = Path + "voltage_vectors_for_unit_test.txt"
 write_unit_test_vectors = WriteVectors
 create_type = 'human'
 celsius = 37
-print Createtxt()
+print(Createtxt())
 os.system(Createtxt())
 print("Done Test 11, Human L2/3\n")
 
@@ -214,7 +214,7 @@ voltage_file = Path + "voltage_vectors_for_unit_test.txt"
 write_unit_test_vectors = WriteVectors
 create_type = 'bbpnew'
 celsius = 34
-print Createtxt()
+print(Createtxt())
 os.system(Createtxt())
 print("Done Test 12, Tufted Pyramidal Cell (L6) Markram et al. Cell (2015)\n")
 
@@ -230,7 +230,7 @@ voltage_file = Path + "voltage_vectors_for_unit_test.txt"
 write_unit_test_vectors = WriteVectors
 create_type  = 'bbpnew'
 celsius = 34
-print Createtxt()
+print(Createtxt())
 os.system(Createtxt())
 print("Done Test 13, Double Bouquet Cell (L4) Markram et al. Cell (2015)\n")
 
