@@ -26,20 +26,20 @@ os.system(Createtxt())
 print("Done Test 1 freq 0 \n")
 
 frequency = 10
-voltage_file = Path + "voltage_vectors_for_unit_test_" + `frequency` +".txt"
+voltage_file = Path + "voltage_vectors_for_unit_test_" + str(frequency) +".txt"
 
 
 os.system(Createtxt())
 print("Done Test 1 freq 10 \n")
 
 frequency = 38
-voltage_file = Path + "voltage_vectors_for_unit_test_" + `frequency` +".txt"
+voltage_file = Path + "voltage_vectors_for_unit_test_" + str(frequency) +".txt"
 
 os.system(Createtxt())
 print("Done Test 1 freq 38 \n")
 
 frequency = 200
-voltage_file = Path + "voltage_vectors_for_unit_test_" + `frequency` +".txt"
+voltage_file = Path + "voltage_vectors_for_unit_test_" + str(frequency) +".txt"
 
 os.system(Createtxt())
 print("Done Test 1 freq 200 \n")
