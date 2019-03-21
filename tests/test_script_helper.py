@@ -227,7 +227,7 @@ def generate_random_synapses_locations(cell,syn_filename,num_syns=10000,seed=2):
         tot_L += sec.L
     for sec in cell.apical:
         tot_L += sec.L
-    print "basal_L,tot_L",basal_L,tot_L
+    print("basal_L,tot_L",basal_L,tot_L)
     for i in range(num_syns):
         L_counter = 0
         x_L = random_obj.uniform(0,tot_L)
@@ -249,7 +249,7 @@ def generate_random_synapses_locations(cell,syn_filename,num_syns=10000,seed=2):
                 else:
                     L_counter+=sec.L
 
-    print syn_filename
+    print(syn_filename)
     with open(syn_filename,'w') as f:
         for syn in syn_L:
             f.write("[%s,%s,%s]"%(syn[0],syn[1],syn[2])+"\n")
@@ -473,9 +473,9 @@ def RunTest(orig_morphology_file, orig_model_file, reduced_model_file, frequency
     rmsd_new = np.sqrt(np.sum((np_recording_vec_reduced-np_recording_vec_control)**2)/np_recording_vec_reduced.size)
     rmsd_old = np.sqrt(np.sum((np_orig_recording_vec_reduced-np_orig_recording_vec_control)**2)/np_orig_recording_vec_reduced.size)
     rmsd_two_reduced_vecs = np.sqrt(np.sum((np_recording_vec_reduced-np_orig_recording_vec_reduced)**2)/np_orig_recording_vec_reduced.size)
-    print "current sim: rmsd between reduced vs complex model:", rmsd_new
-    print "unit test: rmsd between reduced vs complex model:", rmsd_old
-    print "rmsd between current sim reduced and unit test reduced :", rmsd_two_reduced_vecs
+    print("current sim: rmsd between reduced vs complex model:", rmsd_new)
+    print("unit test: rmsd between reduced vs complex model:", rmsd_old)
+    print("rmsd between current sim reduced and unit test reduced :", rmsd_two_reduced_vecs)
     if plot_voltages:
         plt.figure(1)
         plt.plot(time, original_control_voltage, label = 'original model ',c='b')
@@ -524,7 +524,7 @@ if __name__ == "__main__":
     '''
     
     
-    print sys.argv
+    print(sys.argv)
     
     Path = 'TestsFiles/Test_1/'
     orig_morphology_file = sys.argv[1]
