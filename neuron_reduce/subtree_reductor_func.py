@@ -522,15 +522,8 @@ def subtree_reductor(original_cell, synapses_list, netcons_list, reduction_frequ
     for i in range(num_of_basal_subtrees):
         basals.append(reduced_cell.dend[i])
     
-    soma.L = soma_length
-    soma.diam = soma_diam
-    soma.nseg = 1
     append_to_section_lists("soma[0]", "somatic", "reduced_cell")
-    soma.insert('pas')
-    soma.cm = SOMA_CM
-    soma.g_pas= 1.0 / SOMA_RM 
-    soma.Ra = SOMA_RA
-    soma.e_pas = SOMA_E_PAS
+    
     if has_apical:  
         apic.L = reduced_cables_dimensions[0][0]  # the apical cable is index 0 in reduced_cables_dimensions and in the below biophysical_cable_properties
         apic.diam = reduced_cables_dimensions[0][1]
