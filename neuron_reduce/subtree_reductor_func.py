@@ -156,7 +156,7 @@ def find_and_diconnect_Axon(soma_ref):
 
 
 
-def create_segments_to_mech_dic(remove_mechs=True, exclude=['pas', 'na_ion', 'k_ion', 'ca_ion','h_ion']):
+def create_segments_to_mech_dic(remove_mechs=True, exclude=['pas', 'na_ion', 'k_ion', 'ca_ion','h_ion', 'ttx_ion']):
     '''This function copy the create a mapping between a dictionary and the mechanisms that it have
        plus the values of those mechanisms. It also remove the mechanisms from the model in order to
        create a passive model
