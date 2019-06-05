@@ -321,7 +321,7 @@ def generate_random_synapses_locations(cell, syn_filename, num_syns=10000, seed=
 
 def loadtemplate(template_file):
     '''load template if not already defined'''
-    model_obj_name = template_file.split(".")[0].split('/')[-1]
+    model_obj_name = template_file.split(".hoc")[0].split('/')[-1]
     if h.name_declared(model_obj_name) == 0:
         print("loading template '%s'" % model_obj_name)
         h.load_file(template_file)
@@ -459,7 +459,7 @@ def run_test(morphology_file,
     loadtemplate(model_file)
 
     # creates original cell with synapses, and reduces it with neuron_reduce
-    model_obj_name = os.path.basename(model_file.split(".")[0])
+    model_obj_name = os.path.basename(model_file.split(".hoc")[0])
     original_cell = create_model(morphology_file, model_obj_name, "original_cell", create_type)
 
     # creates control cell with synapses
