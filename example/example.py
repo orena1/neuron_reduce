@@ -31,17 +31,17 @@ for i in range(10000):
         e_syn, tau1, tau2, spike_interval, syn_weight = 0, 0.3, 1.8,  1000/2.5, 0.0016
     else:
         e_syn, tau1, tau2, spike_interval, syn_weight = -86, 1,   8,   1000/15.0, 0.0008
-    
-     
+
+
     synapses_list[i].e, synapses_list[i].tau1, synapses_list[i].tau2 = e_syn, tau1, tau2
-    
+
     netstims_list.append(h.NetStim())
     netstims_list[i].interval, netstims_list[i].number, netstims_list[i].start, netstims_list[i].noise = spike_interval, 9e9, 100, 1
-    
+
     randoms_list.append(h.Random())
     randoms_list[i].Random123(i)
     randoms_list[i].negexp(1)
-    netstims_list[i].noiseFromRandom(randoms_list[i])       
+    netstims_list[i].noiseFromRandom(randoms_list[i])
 
     netcons_list.append(h.NetCon(netstims_list[i], synapses_list[i] ))
     netcons_list[i].delay, netcons_list[i].weight[0] = 0, syn_weight
@@ -62,7 +62,7 @@ complex_cell_v = list(soma_v)
 
 
 #apply Neuron_Reduce to simplify the cell
-reduced_cell, synapses_list, netcons_list = neuron_reduce.subtree_reductor(complex_cell, synapses_list, netcons_list, reduction_frequency=0, total_segments_manual=-1)
+reduced_cell, synapses_list, netcons_list = neuron_reduce.subtree_reductor(complex_cell, synapses_list, netcons_list, reduction_frequency=0)
 for r in randoms_list:r.seq(1) #reset random
 
 
@@ -70,11 +70,11 @@ for r in randoms_list:r.seq(1) #reset random
 st = time.time()
 h.run()
 print('reduced cell simulation time {:.4f}'.format(time.time()-st))
-reduced_celll_v = list(soma_v)
+reduced_cell_v = list(soma_v)
 
 #plotting the results
 plt.figure()
 
 plt.plot(time_v, complex_cell_v, label='complex cell')
-plt.plot(time_v, reduced_celll_v,  label='redcued cell')
+plt.plot(time_v, reduced_cell_v,  label='redcued cell')
 plt.show()
