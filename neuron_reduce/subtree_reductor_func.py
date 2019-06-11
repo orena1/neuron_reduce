@@ -468,6 +468,8 @@ def calculate_subtree_q(root, reduction_frequency):
 
 
 def synapse_properties_match(synapse, PP, PP_params_dict):
+    if PP.hname()[:PP.hname().rindex('[')] != synapse.hname()[:synapse.hname().rindex('[')]:
+        return False 
     for param in PP_params_dict[type_of_point_process(PP)]:
         if(param not in ['rng'] and  # https://github.com/neuronsimulator/nrn/issues/136
            str(type(getattr(PP, param))) != "<type 'hoc.HocObject'>" and  # ignore hoc objects
