@@ -178,22 +178,24 @@ def find_synapse_loc(synapse_or_segment, mapping_sections_to_subtree_index):
 
 def find_and_disconnect_axon(soma_ref):
     '''Searching for an axon, it can be a child of the soma or a parent of the soma.'''
-    axon_section, axon_parent = [], False
-
+    axon_section, axon_parent, soma_axon_x  = [], False, None
+    
     for sec in soma_ref.child:
         name = sec.hname().lower()
         if 'axon' in name or 'hill' in name:
             axon_section.append(sec)
             # disconnect axon
+            soma_axon_x = sec.parentseg().x
             sec.push()
             h.disconnect()
             h.define_shape()
-
+        
     if soma_ref.has_parent():
         name = soma_ref.parent().hname().lower()
         if 'axon' in name or 'hill' in name:
             axon_section.append(soma_ref.parent())
             axon_parent = True
+            soma_axon_x = None
             soma_ref.push()
             h.disconnect()
         else:
@@ -202,7 +204,7 @@ def find_and_disconnect_axon(soma_ref):
     if len(axon_section) > 1:
         raise Exception('Soma has a two axons')
 
-    return axon_section, axon_parent
+    return axon_section, axon_parent, soma_axon_x
 
 
 def create_segments_to_mech_vals(sections_to_delete,
@@ -558,7 +560,8 @@ def create_reduced_cell(soma_cable,
                         original_cell,
                         model_obj_name,
                         new_cable_properties,
-                        new_cables_nsegs):
+                        new_cables_nsegs,
+                        subtrees_xs):
     h("objref reduced_cell")
     h("reduced_cell = new " + model_obj_name + "()")
 
@@ -576,7 +579,7 @@ def create_reduced_cell(soma_cable,
         nseg = new_cables_nsegs[0]
         apply_params_to_section("apic[0]", "apical", "reduced_cell",
                                 apic, cable_params, nseg)
-        apic.connect(soma, 1, 0)
+        apic.connect(soma, subtrees_xs[0], 0)
     else:
         apic = None
         num_of_basal_subtrees = len(new_cable_properties)
@@ -597,7 +600,7 @@ def create_reduced_cell(soma_cable,
         apply_params_to_section("dend[" + str(i) + "]", "basal", "reduced_cell",
                                 basals[i], cable_params, nseg)
 
-        basals[i].connect(soma, 0, 0)
+        basals[i].connect(soma, subtrees_xs[index_in_reduced_cables_dimensions], 0)
 
     # create cell python template
     cell = Neuron(h.reduced_cell)
@@ -759,7 +762,7 @@ def subtree_reductor(original_cell,
     has_apical = len(list(original_cell.apical)) != 0
 
     soma_ref = h.SectionRef(sec=soma)
-    axon_section, axon_is_parent = find_and_disconnect_axon(soma_ref)
+    axon_section, axon_is_parent, soma_axon_x = find_and_disconnect_axon(soma_ref)
     roots_of_subtrees, num_of_subtrees = gather_subtrees(soma_ref)
 
     sections_to_delete, section_per_subtree_index, mapping_sections_to_subtree_index = \
@@ -771,7 +774,9 @@ def subtree_reductor(original_cell,
     segment_to_mech_vals = create_segments_to_mech_vals(sections_to_delete)
 
     # disconnects all the subtrees from the soma
+    subtrees_xs = []
     for subtree_root in roots_of_subtrees:
+        subtrees_xs.append(subtree_root.parentseg().x)
         h.disconnect(sec=subtree_root)
 
     # reducing the subtrees
@@ -789,7 +794,8 @@ def subtree_reductor(original_cell,
                                        original_cell,
                                        model_obj_name,
                                        new_cable_properties,
-                                       new_cables_nsegs)
+                                       new_cables_nsegs,
+                                       subtrees_xs)
 
     new_synapses_list, subtree_ind_to_q = merge_and_add_synapses(
         num_of_subtrees,
@@ -832,7 +838,7 @@ def subtree_reductor(original_cell,
         if axon_is_parent:
             soma.connect(axon_section[0])
         else:
-            axon_section[0].connect(soma)
+            axon_section[0].connect(soma, soma_axon_x)
 
     # Now we delete the original model
     for section in sections_to_delete:
