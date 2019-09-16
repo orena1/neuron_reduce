@@ -28,7 +28,7 @@ import cmath
 import numpy as np
 import neuron
 from neuron import h
-from neuron import gui
+h.load_file("stdrun.hoc")
 
 from .reducing_methods import (reduce_subtree,
                                reduce_synapse,
