@@ -95,8 +95,8 @@ def calculate_nsegs_from_manual_arg(new_cable_properties, total_segments_wanted)
     dends_nsegs = []
     for prop in new_cable_properties:
         new_length = prop.electrotonic_length
-        new_nseg_to_put = int((float(new_length) / sum_of_lengths) *
-                              total_segments_in_dendrites)
+        new_nseg_to_put = int(round((float(new_length) / sum_of_lengths) *
+                              total_segments_in_dendrites))
         if new_nseg_to_put < 1:
             new_nseg_to_put = 1
         dends_nsegs.append(new_nseg_to_put)
@@ -179,7 +179,7 @@ def find_synapse_loc(synapse_or_segment, mapping_sections_to_subtree_index):
 def find_and_disconnect_axon(soma_ref):
     '''Searching for an axon, it can be a child of the soma or a parent of the soma.'''
     axon_section, axon_parent, soma_axon_x  = [], False, None
-    
+
     for sec in soma_ref.child:
         name = sec.hname().lower()
         if 'axon' in name or 'hill' in name:
@@ -189,7 +189,7 @@ def find_and_disconnect_axon(soma_ref):
             sec.push()
             h.disconnect()
             h.define_shape()
-        
+
     if soma_ref.has_parent():
         name = soma_ref.parent().hname().lower()
         if 'axon' in name or 'hill' in name:
@@ -471,7 +471,7 @@ def calculate_subtree_q(root, reduction_frequency):
 
 def synapse_properties_match(synapse, PP, PP_params_dict):
     if PP.hname()[:PP.hname().rindex('[')] != synapse.hname()[:synapse.hname().rindex('[')]:
-        return False 
+        return False
     for param in PP_params_dict[type_of_point_process(PP)]:
         if(param not in ['rng'] and  # https://github.com/neuronsimulator/nrn/issues/136
            str(type(getattr(PP, param))) != "<type 'hoc.HocObject'>" and  # ignore hoc objects
@@ -727,22 +727,37 @@ def subtree_reductor(original_cell,
     desired number of segments in the new model (if this parameter is empty,
     the number of segments will be such that there is a segment for every 0.1
     lambda), and an optional param for the point process to be compared before
-    deciding on whethet to merge a synapse or not and reduces the cell (using
+    deciding on whether to merge a synapse or not and reduces the cell (using
     the given reduction_frequency). Creates a reduced instance using the model
     template in the file whose filename is given as a parameter, and merges
     synapses of the same type that get mapped to the same segment
     (same "reduced" synapse object for them all, but different NetCon objects).
 
+
+
+    model_filename : model.hoc  will use a default template
+    total_segments_manual: sets the number of segments in the reduced model
+                           can be either -1, a float between 0 to 1, or an int
+                           if total_segments_manual = -1 will do automatic segmentation
+                           if total_segments_manual>1 will set the number of segments
+                           in the reduced model to total_segments_manual
+                           if 0>total_segments_manual>1 will automatically segment the model
+                           but if the automatic segmentation will produce a segment number that
+                           is lower than original_number_of_segments*total_segments_manual it
+                           will set the number of segments in the reduced model to:
+                           original_number_of_segments*total_segments_manual
+
     Returns the new reduced cell, a list of the new synapses, and the list of
     the inputted netcons which now have connections with the new synapses.
-    note #0: a default template is available, one can use:
-    model_filename=model.hoc note #1: The original cell instance, synapses and
-    Netcons given as arguments are altered by the function and cannot be used
-    outside of it in their original context.  note #2: Synapses are determined
-    to be of the same type and mergeable if their reverse potential, tau1 and
-    tau2 values are identical.  note #3: Merged synapses are assigned a single
-    new synapse object that represents them all, but keep their original NetCon
-    objects. Each such NetCon now connects the original synapse's NetStim with
+
+    Notes:
+    1) The original cell instance, synapses and Netcons given as arguments are altered
+    by the function and cannot be used outside of it in their original context.
+    2) Synapses are determined to be of the same type and mergeable if their reverse
+    potential, tau1 and tau2 values are identical.
+    3) Merged synapses are assigned a single new synapse object that represents them
+    all, but keep their original NetCon objects. Each such NetCon now connects the
+    original synapse's NetStim with
     the reduced synapse.
     '''
     if PP_params_dict is None:
@@ -783,11 +798,26 @@ def subtree_reductor(original_cell,
     new_cable_properties = [reduce_subtree(roots_of_subtrees[i], reduction_frequency)
                             for i in num_of_subtrees]
 
-    if total_segments_manual != -1:
+    if total_segments_manual > 1:
         new_cables_nsegs = calculate_nsegs_from_manual_arg(new_cable_properties,
                                                            total_segments_manual)
     else:
         new_cables_nsegs = calculate_nsegs_from_lambda(new_cable_properties)
+        if total_segments_manual > 0:
+            original_cell_seg_n = (sum(i.nseg for i in list(original_cell.basal)) +
+                                   sum(i.nseg for i in list(original_cell.apical))
+                                   )
+            min_reduced_seg_n = int(round((total_segments_manual * original_cell_seg_n)))
+            if sum(new_cables_nsegs) < min_reduced_seg_n:
+                print("number of segments calculated using lambda is {}, "
+                      "the original cell had {} segments.  "
+                      "The min reduced segments is set to {}% of reduced cell segments".format(
+                          sum(new_cables_nsegs),
+                          original_cell_seg_n,
+                          total_segments_manual * 100))
+                print("the reduced cell nseg is set to %s" % min_reduced_seg_n)
+                new_cables_nsegs = calculate_nsegs_from_manual_arg(new_cable_properties,
+                                                                   min_reduced_seg_n)
 
     cell, basals = create_reduced_cell(soma_cable,
                                        has_apical,
