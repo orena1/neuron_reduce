@@ -707,7 +707,14 @@ def merge_and_add_synapses(num_of_subtrees,
 
     return new_synapses_list, subtree_ind_to_q
 
+def textify_seg_to_seg(original_seg_to_reduced_seg):
+    original_seg_to_reduced_seg_text = {}
+    for org_seg in original_seg_to_reduced_seg:
+        original_seg_to_reduced_seg_text[str(org_seg)] = str(original_seg_to_reduced_seg[org_seg])
 
+    return original_seg_to_reduced_seg_text
+   
+   
 def subtree_reductor(original_cell,
                      synapses_list,
                      netcons_list,
@@ -748,8 +755,7 @@ def subtree_reductor(original_cell,
                            will set the number of segments in the reduced model to:
                            original_number_of_segments*total_segments_manual
     return_seg_to_seg: if True the function will also return a textify version of the mapping
-                       between 1. the original segments to the reduced segments 
-                               2. the reduced segmented to the original segments
+                       between the original segments to the reduced segments 
 
 
     Returns the new reduced cell, a list of the new synapses, and the list of
@@ -869,9 +875,7 @@ def subtree_reductor(original_cell,
                         mapping_type)
     
     if return_seg_to_seg:
-        original_seg_to_reduced_seg_text, reduced_seg_to_original_seg_text = textify_seg_to_seg(
-              original_seg_to_reduced_seg,
-              reduced_seg_to_original_seg)
+        original_seg_to_reduced_seg_text = textify_seg_to_seg(original_seg_to_reduced_seg)
 
     # Connect axon back to the soma
     if len(axon_section) > 0:
@@ -890,19 +894,10 @@ def subtree_reductor(original_cell,
 
     with push_section(cell.hoc_model.soma[0]):
         h.delete_section()
-    if return_seg_to_seg:
-        return cell, new_synapses_list, netcons_list, original_seg_to_reduced_seg_text, reduced_seg_to_original_seg_text
+    if return_seg_to_seg is True:
+        return cell, new_synapses_list, netcons_list, original_seg_to_reduced_seg_text
     else:
         return cell, new_synapses_list, netcons_list
-
-def textify_seg_to_seg(original_seg_to_reduced_seg, reduced_seg_to_original_seg):
-    original_seg_to_reduced_seg_text, reduced_seg_to_original_seg_text = {},{}
-    for org_seg in original_seg_to_reduced_seg:
-        original_seg_to_reduced_seg_text[str(org_seg)] = str(original_seg_to_reduced_seg[org_seg])
-
-    for red_seg in reduced_seg_to_original_seg:
-        reduced_seg_to_original_seg_text[str(red_seg)] = [str(org_seg) for org_seg in reduced_seg_to_original_seg[red_seg]]
-    return original_seg_to_reduced_seg_text, reduced_seg_to_original_seg_text
 
 
 class Neuron(object):
