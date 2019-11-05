@@ -723,7 +723,7 @@ def subtree_reductor(original_cell,
                      total_segments_manual=-1,
                      PP_params_dict=None,
                      mapping_type='impedance',
-                     return_seg_to_seg = False
+                     return_seg_to_seg=False
                      ):
 
     '''
