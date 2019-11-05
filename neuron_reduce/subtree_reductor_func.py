@@ -894,7 +894,7 @@ def subtree_reductor(original_cell,
 
     with push_section(cell.hoc_model.soma[0]):
         h.delete_section()
-    if return_seg_to_seg is True:
+    if return_seg_to_seg:
         return cell, new_synapses_list, netcons_list, original_seg_to_reduced_seg_text
     else:
         return cell, new_synapses_list, netcons_list
