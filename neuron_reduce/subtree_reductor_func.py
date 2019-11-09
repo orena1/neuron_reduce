@@ -707,7 +707,11 @@ def merge_and_add_synapses(num_of_subtrees,
 
     return new_synapses_list, subtree_ind_to_q
 
-
+def textify_seg_to_seg(segs):
+    '''convert segment dictionary to text'''
+    ret = {str(k): str(v) for k, v in segs.items()}
+    return ret
+   
 def subtree_reductor(original_cell,
                      synapses_list,
                      netcons_list,
@@ -715,7 +719,8 @@ def subtree_reductor(original_cell,
                      model_filename='model.hoc',
                      total_segments_manual=-1,
                      PP_params_dict=None,
-                     mapping_type='impedance'
+                     mapping_type='impedance',
+                     return_seg_to_seg=False
                      ):
 
     '''
@@ -746,6 +751,9 @@ def subtree_reductor(original_cell,
                            is lower than original_number_of_segments*total_segments_manual it
                            will set the number of segments in the reduced model to:
                            original_number_of_segments*total_segments_manual
+    return_seg_to_seg: if True the function will also return a textify version of the mapping
+                       between the original segments to the reduced segments 
+
 
     Returns the new reduced cell, a list of the new synapses, and the list of
     the inputted netcons which now have connections with the new synapses.
@@ -862,6 +870,9 @@ def subtree_reductor(original_cell,
                         basals,
                         segment_to_mech_vals,
                         mapping_type)
+    
+    if return_seg_to_seg:
+        original_seg_to_reduced_seg_text = textify_seg_to_seg(original_seg_to_reduced_seg)
 
     # Connect axon back to the soma
     if len(axon_section) > 0:
@@ -880,8 +891,10 @@ def subtree_reductor(original_cell,
 
     with push_section(cell.hoc_model.soma[0]):
         h.delete_section()
-
-    return cell, new_synapses_list, netcons_list
+    if return_seg_to_seg:
+        return cell, new_synapses_list, netcons_list, original_seg_to_reduced_seg_text
+    else:
+        return cell, new_synapses_list, netcons_list
 
 
 class Neuron(object):
