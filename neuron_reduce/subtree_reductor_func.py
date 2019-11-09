@@ -707,13 +707,10 @@ def merge_and_add_synapses(num_of_subtrees,
 
     return new_synapses_list, subtree_ind_to_q
 
-def textify_seg_to_seg(original_seg_to_reduced_seg):
-    original_seg_to_reduced_seg_text = {}
-    for org_seg in original_seg_to_reduced_seg:
-        original_seg_to_reduced_seg_text[str(org_seg)] = str(original_seg_to_reduced_seg[org_seg])
-
-    return original_seg_to_reduced_seg_text
-   
+def textify_seg_to_seg(segs):
+    '''convert segment dictionary to text'''
+    ret = {str(k): str(v) for k, v in segs.items()}
+    return ret
    
 def subtree_reductor(original_cell,
                      synapses_list,
