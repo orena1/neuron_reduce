@@ -508,6 +508,9 @@ def gather_subtrees(soma_ref):
     roots_of_subtrees = []
     num_of_subtrees = []
     for i in range(int(soma_ref.nchild())):
+        if 'soma' in str(soma_ref.child[i]):
+            print("soma is child, ignore - not tested yet")
+            continue
         num_of_subtrees.append(i)
         roots_of_subtrees.append(soma_ref.child[i])
 
