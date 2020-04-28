@@ -4,12 +4,13 @@ added the method by Guy to find L and X
 '''
 import collections
 import contextlib
+import logging
 import math
 import cmath
 
 from neuron import h
 
-
+logger = logging.getLogger(__name__)
 CableParams = collections.namedtuple('CableParams',
                                      'length, diam, space_const,'
                                      'cm, rm, ra, e_pas, electrotonic_length')
@@ -115,7 +116,7 @@ def find_best_real_L(Z0, ZL_goal, q, max_L=10.0, max_depth=50):
         else:
             current_L, min_L = (max_L + current_L) / 2.0, current_L
     else:
-        print("The difference between L and the goal L is larger than 0.001")
+        logger.info("The difference between L and the goal L is larger than 0.001")
     return current_L
 
 
@@ -148,7 +149,7 @@ def find_best_real_X(Z0, ZX_goal, q, L, max_depth=50):
         else:
             current_x, min_x = (max_x + current_x) / 2.0, current_x
     else:
-        print("The difference between X and the goal X is larger than 0.001")
+        logger.info("The difference between X and the goal X is larger than 0.001")
 
     return current_x
 

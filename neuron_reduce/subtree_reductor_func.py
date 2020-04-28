@@ -21,6 +21,7 @@ function subtree_reductor():
 '''
 import collections
 import itertools as it
+import logging
 import math
 import re
 import cmath
@@ -38,6 +39,7 @@ from .reducing_methods import (reduce_subtree,
                                push_section,
                                )
 
+logger = logging.getLogger(__name__)
 SOMA_LABEL = "soma"
 EXCLUDE_MECHANISMS = ('pas', 'na_ion', 'k_ion', 'ca_ion', 'h_ion', 'ttx_ion', )
 
@@ -343,9 +345,9 @@ def copy_dendritic_mech(original_seg_to_reduced_seg,
         all_segments.extend(list(bas))
 
     if len(all_segments) != len(reduced_seg_to_original_seg):
-        print('There is no segment to segment copy, it means that some segments in the reduced '
-              'model did not receive channels from the original cell')
-        print('trying to compensate by copying channels from neighboring segments')
+        logger.warning('There is no segment to segment copy, it means that some segments in the'
+                    'reduced model did not receive channels from the original cell.'
+                    'Trying to compensate by copying channels from neighboring segments')
         handle_orphan_segments(original_seg_to_reduced_seg,
                                all_segments,
                                vals_per_mech_per_segment,
@@ -483,14 +485,14 @@ def synapse_properties_match(synapse, PP, PP_params_dict):
 def load_model(model_filename):
     model_obj_name = model_filename.split(".")[0].split('/')[-1]
     if h.name_declared(model_obj_name) == 0:
-        print("loading template '" + model_obj_name + "'")
+        logger.debug("loading template '%s'" % model_obj_name)
         if model_filename == 'model.hoc':
-            print("loading default reduced model")
+            logger.debug("loading default reduced model")
             load_default_model()
         else:
             h.load_file(model_filename)
     else:
-        print("WARNING The template '" + model_obj_name + "' is already defined... not loading.")
+        logger.info("The template '%s' is already defined... not loading." % model_obj_name)
     return model_obj_name
 
 
@@ -509,7 +511,7 @@ def gather_subtrees(soma_ref):
     num_of_subtrees = []
     for i in range(int(soma_ref.nchild())):
         if 'soma' in str(soma_ref.child[i]):
-            print("soma is child, ignore - not tested yet")
+            logger.warning("soma is child, ignore - not tested yet")
             continue
         num_of_subtrees.append(i)
         roots_of_subtrees.append(soma_ref.child[i])
@@ -820,13 +822,13 @@ def subtree_reductor(original_cell,
                                    )
             min_reduced_seg_n = int(round((total_segments_manual * original_cell_seg_n)))
             if sum(new_cables_nsegs) < min_reduced_seg_n:
-                print("number of segments calculated using lambda is {}, "
+                logger.debug("number of segments calculated using lambda is {}, "
                       "the original cell had {} segments.  "
                       "The min reduced segments is set to {}% of reduced cell segments".format(
                           sum(new_cables_nsegs),
                           original_cell_seg_n,
                           total_segments_manual * 100))
-                print("the reduced cell nseg is set to %s" % min_reduced_seg_n)
+                logger.debug("the reduced cell nseg is set to %s" % min_reduced_seg_n)
                 new_cables_nsegs = calculate_nsegs_from_manual_arg(new_cable_properties,
                                                                    min_reduced_seg_n)
 

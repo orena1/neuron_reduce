@@ -40,12 +40,15 @@ from contextlib import contextmanager
 import sys
 import random
 import os
+import logging
 import subprocess
 from neuron import h
 import numpy as np
 import matplotlib.pyplot as plt
 
 from neuron_reduce import subtree_reductor
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 #############################
 # simulation parameters - to be adjusted by the user

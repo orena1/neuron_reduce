@@ -1,11 +1,15 @@
 #reduction of L5_PC using Neuron_Reduce
 
 from __future__ import division
+import os
+import logging
 from neuron import gui,h
 import numpy as np
 import neuron_reduce
 import time
 import matplotlib.pyplot as plt
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
 
 
 
