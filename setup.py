@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="neuron_reduce",
-    version="0.0.6",
+    version="0.0.7",
     author="Oren Amsalem, Guy Eyal, Noa Rogozinski, Michael Gevaert, Idan Segev",
     author_email="oren.amsalem1@mail.huji.ac.il",
     description="Efficient analytical reduction of nonlinear detailed neuron models",
