@@ -193,7 +193,7 @@ def find_and_disconnect_axon(soma_ref):
             h.define_shape()
 
     if soma_ref.has_parent():
-        name = soma_ref.parent().hname().lower()
+        name = soma_ref.parent().sec.hname().lower()
         if 'axon' in name or 'hill' in name:
             axon_section.append(soma_ref.parent())
             axon_parent = True

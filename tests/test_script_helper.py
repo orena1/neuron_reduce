@@ -452,6 +452,8 @@ def run_test(morphology_file,
             #print(stderr)
             h.nrn_load_dll("x86_64/.libs/libnrnmech.so.0")
             h.nrn_load_dll("x86_64/.libs/libnrnmech.0.so")
+            h.nrn_load_dll("x86_64/.libs/libnrnmech.so")
+            
 
     if create_type == 'hay':
         loadtemplate(model_file[:model_file.rindex('/')] + '/L5PCbiophys3.hoc')
