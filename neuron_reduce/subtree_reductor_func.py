@@ -520,7 +520,7 @@ def gather_subtrees(soma_ref):
     ix_of_apical = None
     for i in num_of_subtrees:
         if 'apic' in roots_of_subtrees[i].hname():
-            assert ix_of_apical is None, 'Multiple apical dendrites not suppored'
+            assert ix_of_apical is None, 'Multiple apical dendrites not supported'
             ix_of_apical = i
 
     if ix_of_apical is not None:
